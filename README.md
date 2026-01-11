@@ -41,14 +41,53 @@ cd substack_scraper
 pip install -r requirements.txt
 ```
 
-For the premium scraper, update the `config.py` in the root directory with your Substack email and password:
+For the premium scraper, set your Substack credentials as environment variables (recommended for security).
+
+**Option 1: Using a .env file (easiest)**
+
+Copy the example file and edit it:
+```bash
+cp .env.example .env
+# Edit .env with your credentials (this file is gitignored)
+```
+
+Then load it before running:
+```bash
+# Linux/Mac
+source .env && python substack_scraper.py --premium
+
+# Or use a tool like python-dotenv
+```
+
+**Option 2: Set environment variables directly**
+
+```bash
+# Linux/Mac
+export SUBSTACK_EMAIL="your-email@domain.com"
+export SUBSTACK_PASSWORD="your-password"
+
+# Windows (PowerShell)
+$env:SUBSTACK_EMAIL="your-email@domain.com"
+$env:SUBSTACK_PASSWORD="your-password"
+
+# Windows (Command Prompt)
+set SUBSTACK_EMAIL=your-email@domain.com
+set SUBSTACK_PASSWORD=your-password
+```
+
+**Option 3: Edit config.py directly (not recommended)**
+
+Alternatively, you can edit `config.py` in the root directory (not recommended as it may expose credentials):
 
 ```python
 EMAIL = "your-email@domain.com"
 PASSWORD = "your-password"
 ```
 
-You'll also need Microsoft Edge installed for the Selenium webdriver.
+You'll need a browser installed for Selenium automation:
+- **Edge** (default) - Microsoft Edge
+- **Chrome** - Google Chrome
+- **Firefox** - Mozilla Firefox
 
 ## Usage
 
@@ -69,6 +108,25 @@ For premium Substack sites:
 
 ```bash
 python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --premium
+```
+
+To use a specific browser (Chrome, Firefox, or Edge):
+
+```bash
+# Using Chrome
+python substack_scraper.py --url https://example.substack.com --premium --browser chrome
+
+# Using Firefox
+python substack_scraper.py --url https://example.substack.com --premium --browser firefox
+
+# Using Edge (default)
+python substack_scraper.py --url https://example.substack.com --premium --browser edge
+```
+
+To run in headless mode (no browser window):
+
+```bash
+python substack_scraper.py --url https://example.substack.com --premium --headless
 ```
 
 To scrape a specific number of posts:

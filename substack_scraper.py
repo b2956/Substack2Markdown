@@ -17,7 +17,11 @@ from xml.etree import ElementTree as ET
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
 from urllib.parse import urlparse
@@ -395,51 +399,100 @@ class PremiumSubstackScraper(BaseSubstackScraper):
         base_substack_url: str,
         md_save_dir: str,
         html_save_dir: str,
+        browser: str = 'edge',
         headless: bool = False,
-        edge_path: str = '',
-        edge_driver_path: str = '',
+        browser_path: str = '',
+        driver_path: str = '',
         user_agent: str = ''
     ) -> None:
         super().__init__(base_substack_url, md_save_dir, html_save_dir)
 
-        options = EdgeOptions()
-        if headless:
-            # modern headless flag (works better with recent Edge/Chromium)
-            options.add_argument("--headless=new")
-        if edge_path:
-            options.binary_location = edge_path
-        if user_agent:
-            options.add_argument(f"user-agent={user_agent}")
-    
-        if isinstance(options, EdgeOptions):
-            os.environ.setdefault("SE_DRIVER_MIRROR_URL", "https://msedgedriver.microsoft.com")
-        elif isinstance(options, ChromeOptions):
-            os.environ.setdefault("SE_DRIVER_MIRROR_URL", "https://chromedriver.storage.googleapis.com")
-
-        
+        browser = browser.lower()
         self.driver = None
 
-        # 1) Prefer an explicit driver path (manual download)
-        if edge_driver_path and os.path.exists(edge_driver_path):
-            service = Service(executable_path=edge_driver_path)
-            self.driver = webdriver.Edge(service=service, options=options)
-        else:
-            # 2) Try webdriver_manager (needs network/DNS)
-            try:
-                service = Service(EdgeChromiumDriverManager().install())
-                self.driver = webdriver.Edge(service=service, options=options)
-            except Exception as e:
-                print("webdriver_manager could not download msedgedriver (network/DNS). Falling back to Selenium Manager.")
-                # 3) Selenium Manager fallback (still needs network; but avoids webdriver_manager)
+        # Set up browser options
+        if browser == 'chrome':
+            options = ChromeOptions()
+            if headless:
+                options.add_argument("--headless=new")
+            if browser_path:
+                options.binary_location = browser_path
+            if user_agent:
+                options.add_argument(f"user-agent={user_agent}")
+
+            os.environ.setdefault("SE_DRIVER_MIRROR_URL", "https://chromedriver.storage.googleapis.com")
+
+            if driver_path and os.path.exists(driver_path):
+                service = Service(executable_path=driver_path)
+                self.driver = webdriver.Chrome(service=service, options=options)
+            else:
                 try:
-                    # IMPORTANT: ensure no stale driver in PATH (e.g. C:\Windows\msedgedriver.exe v138)
-                    self.driver = webdriver.Edge(options=options)
-                except SessionNotCreatedException as se:
-                    raise RuntimeError(
-                        "Selenium Manager fallback failed due to driver/browser mismatch.\n"
-                        "Fix by either: (a) removing stale msedgedriver in PATH (e.g. C:\\Windows\\msedgedriver.exe) and replace with a fresh one downloaded from https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver, "
-                        "or (b) pass --edge-driver-path to a manually downloaded driver that matches your Edge version."
-                    ) from se
+                    service = Service(ChromeDriverManager().install())
+                    self.driver = webdriver.Chrome(service=service, options=options)
+                except Exception:
+                    print("webdriver_manager could not download chromedriver. Falling back to Selenium Manager.")
+                    try:
+                        self.driver = webdriver.Chrome(options=options)
+                    except SessionNotCreatedException as se:
+                        raise RuntimeError(
+                            "Selenium Manager fallback failed due to driver/browser mismatch.\n"
+                            "Please download the correct chromedriver from https://chromedriver.chromium.org/"
+                        ) from se
+
+        elif browser == 'firefox':
+            options = FirefoxOptions()
+            if headless:
+                options.add_argument("--headless")
+            if browser_path:
+                options.binary_location = browser_path
+            if user_agent:
+                options.set_preference("general.useragent.override", user_agent)
+
+            if driver_path and os.path.exists(driver_path):
+                service = Service(executable_path=driver_path)
+                self.driver = webdriver.Firefox(service=service, options=options)
+            else:
+                try:
+                    service = Service(GeckoDriverManager().install())
+                    self.driver = webdriver.Firefox(service=service, options=options)
+                except Exception:
+                    print("webdriver_manager could not download geckodriver. Falling back to Selenium Manager.")
+                    try:
+                        self.driver = webdriver.Firefox(options=options)
+                    except SessionNotCreatedException as se:
+                        raise RuntimeError(
+                            "Selenium Manager fallback failed due to driver/browser mismatch.\n"
+                            "Please download the correct geckodriver from https://github.com/mozilla/geckodriver/releases"
+                        ) from se
+
+        else:  # Default to Edge
+            options = EdgeOptions()
+            if headless:
+                options.add_argument("--headless=new")
+            if browser_path:
+                options.binary_location = browser_path
+            if user_agent:
+                options.add_argument(f"user-agent={user_agent}")
+
+            os.environ.setdefault("SE_DRIVER_MIRROR_URL", "https://msedgedriver.microsoft.com")
+
+            if driver_path and os.path.exists(driver_path):
+                service = Service(executable_path=driver_path)
+                self.driver = webdriver.Edge(service=service, options=options)
+            else:
+                try:
+                    service = Service(EdgeChromiumDriverManager().install())
+                    self.driver = webdriver.Edge(service=service, options=options)
+                except Exception:
+                    print("webdriver_manager could not download msedgedriver. Falling back to Selenium Manager.")
+                    try:
+                        self.driver = webdriver.Edge(options=options)
+                    except SessionNotCreatedException as se:
+                        raise RuntimeError(
+                            "Selenium Manager fallback failed due to driver/browser mismatch.\n"
+                            "Fix by either: (a) removing stale msedgedriver in PATH (e.g. C:\\Windows\\msedgedriver.exe) and replace with a fresh one downloaded from https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver, "
+                            "or (b) pass --driver-path to a manually downloaded driver that matches your browser version."
+                        ) from se
 
         self.login()
 
@@ -520,16 +573,23 @@ def parse_args() -> argparse.Namespace:
         "Scraper.",
     )
     parser.add_argument(
-        "--edge-path",
+        "--browser",
         type=str,
-        default="",
-        help='Optional: The path to the Edge browser executable (i.e. "path_to_msedge.exe").',
+        default="edge",
+        choices=["edge", "chrome", "firefox"],
+        help='Browser to use for premium scraping (edge, chrome, or firefox). Default: edge',
     )
     parser.add_argument(
-        "--edge-driver-path",
+        "--browser-path",
         type=str,
         default="",
-        help='Optional: The path to the Edge WebDriver executable (i.e. "path_to_msedgedriver.exe").',
+        help='Optional: The path to the browser executable (e.g., "path_to_msedge.exe", "path_to_chrome.exe", or "path_to_firefox").',
+    )
+    parser.add_argument(
+        "--driver-path",
+        type=str,
+        default="",
+        help='Optional: The path to the WebDriver executable (e.g., "path_to_msedgedriver.exe", "path_to_chromedriver", or "path_to_geckodriver").',
     )
     parser.add_argument(
         "--user-agent",
@@ -560,7 +620,11 @@ def main():
         if args.premium:
             scraper = PremiumSubstackScraper(
                 args.url,
+                browser=args.browser,
                 headless=args.headless,
+                browser_path=args.browser_path,
+                driver_path=args.driver_path,
+                user_agent=args.user_agent,
                 md_save_dir=args.directory,
                 html_save_dir=args.html_directory
             )
@@ -576,10 +640,13 @@ def main():
         if USE_PREMIUM:
             scraper = PremiumSubstackScraper(
                 base_substack_url=BASE_SUBSTACK_URL,
+                browser=args.browser,
+                headless=args.headless,
+                browser_path=args.browser_path,
+                driver_path=args.driver_path,
+                user_agent=args.user_agent,
                 md_save_dir=args.directory,
-                html_save_dir=args.html_directory,
-                edge_path=args.edge_path,
-                edge_driver_path=args.edge_driver_path
+                html_save_dir=args.html_directory
             )
         else:
             scraper = SubstackScraper(
