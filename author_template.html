@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><!-- AUTHOR_NAME --></title>
+    <title>ByteByteGo</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
     <header>
-        <h1 id="author-name"><!-- AUTHOR_NAME --></h1>
+        <h1 id="author-name">ByteByteGo</h1>
         <div id="stats">
             <div id="main-stats">
                 <span id="showing-count">0</span> / <span id="total-count">0</span> articles
@@ -45,7 +45,19 @@
         </div>
     </div>
 
-    <div id="essays-container"></div>
+    <!-- List View -->
+    <div id="list-view">
+        <div id="essays-container"></div>
+    </div>
+
+    <!-- Article View -->
+    <div id="article-view" style="display: none;">
+        <div id="article-header">
+            <button id="back-button">← Back to Articles</button>
+        </div>
+        <div id="article-content"></div>
+    </div>
+
     <script type="application/json" id="essaysData"></script>
     <script src="../assets/js/populate-essays.js"></script>
 </body>

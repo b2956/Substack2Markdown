@@ -190,7 +190,7 @@ function populateEssays(data) {
 
         return `
             <li>
-                <a href="../${showHTML ? essay.html_link : essay.file_link}" target="_blank">
+                <a href="#" class="article-link" data-html-link="${essay.html_link}" data-md-link="${essay.file_link}">
                     ${essay.title}${badges}
                 </a>
                 <div class="subtitle">${essay.subtitle}</div>
@@ -204,6 +204,15 @@ function populateEssays(data) {
 
     essaysContainer.innerHTML = `<ul>${list}</ul>`;
     updateStats(filtered.length, originalData.length);
+
+    // Add click handlers to article links
+    document.querySelectorAll('.article-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const articlePath = showHTML ? link.dataset.htmlLink : link.dataset.mdLink;
+            loadArticle(articlePath);
+        });
+    });
 }
 
 // Refresh display with current filters and sort
@@ -222,6 +231,43 @@ function refreshDisplay() {
     }
 
     populateEssays(data);
+}
+
+// Navigation functions
+function showListView() {
+    document.getElementById('list-view').style.display = 'block';
+    document.getElementById('article-view').style.display = 'none';
+    document.getElementById('controls').style.display = 'block';
+    window.scrollTo(0, 0);
+}
+
+function showArticleView() {
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('article-view').style.display = 'block';
+    document.getElementById('controls').style.display = 'none';
+    window.scrollTo(0, 0);
+}
+
+async function loadArticle(articlePath) {
+    try {
+        const response = await fetch(`../${articlePath}`);
+        if (!response.ok) {
+            throw new Error('Failed to load article');
+        }
+        const htmlContent = await response.text();
+
+        // Extract the content from the fetched HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const content = doc.querySelector('.markdown-content') || doc.body;
+
+        document.getElementById('article-content').innerHTML = content.innerHTML;
+        showArticleView();
+    } catch (error) {
+        console.error('Error loading article:', error);
+        document.getElementById('article-content').innerHTML = '<p style="color: red;">Error loading article. Please try again.</p>';
+        showArticleView();
+    }
 }
 
 // Initialize
@@ -295,6 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.remove('active');
         });
         refreshDisplay();
+    });
+
+    // Back button
+    document.getElementById('back-button').addEventListener('click', () => {
+        showListView();
     });
 
     // Create tag buttons and initial population
