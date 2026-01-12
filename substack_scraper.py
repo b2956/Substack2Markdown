@@ -25,10 +25,10 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
 from urllib.parse import urlparse
-from config import EMAIL, PASSWORD, AUTHOR_NAME, BLOG_TITLE
+from config import EMAIL, PASSWORD, AUTHOR_NAME, BLOG_TITLE, BLOG_URL
 
 USE_PREMIUM: bool = True  # Set to True if you want to login to Substack and convert paid for posts
-BASE_SUBSTACK_URL: str = "https://www.thefitzwilliam.com/"  # Substack you want to convert to markdown
+BASE_SUBSTACK_URL: str = BLOG_URL  # Substack you want to convert to markdown (from environment variable)
 BASE_MD_DIR: str = "substack_md_files"  # Name of the directory we'll save the .md essay files
 BASE_HTML_DIR: str = "substack_html_pages"  # Name of the directory we'll save the .html essay files
 HTML_TEMPLATE: str = "author_template.html"  # HTML template to use for the author page
