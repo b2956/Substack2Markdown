@@ -1,10 +1,10 @@
-﻿# Substack2Markdown
+# Substack2Markdown
 
-Substack2Markdown is a Python tool for downloading free and premium Substack posts and saving them as both Markdown and 
-HTML files, and includes a simple HTML interface to browse and sort through the posts. It will save paid for content as 
-long as you're subscribed to that substack. 
+Substack2Markdown is a Python tool for downloading free and premium Substack posts and saving them as both Markdown and
+HTML files, and includes a modern HTML interface to browse and sort through the posts. It will save paid for content as
+long as you're subscribed to that substack.
 
-🆕 @Firevvork has built a web version of this tool at [Substack Reader](https://www.substacktools.com/reader) - no 
+🆕 @Firevvork has built a web version of this tool at [Substack Reader](https://www.substacktools.com/reader) - no
 installation required! (Works for free Substacks only.)
 
 
@@ -14,15 +14,28 @@ Once you run the script, it will create a folder named after the substack in `/s
 and then begin to scrape the substack URL, converting the blog posts into markdown files. Once all the posts have been
 saved, it will generate an HTML file in `/substack_html_pages` directory that allows you to browse the posts.
 
-You can either hardcode the substack URL and the number of posts you'd like to save into the top of the file, or 
+You can either hardcode the substack URL and the number of posts you'd like to save into the top of the file, or
 specify them as command line arguments.
 
 ## Features
 
-- Converts Substack posts into Markdown files.
-- Generates an HTML file to browse Markdown files.
-- Supports free and premium content (with subscription).
-- The HTML interface allows sorting essays by date or likes.
+### Core Features
+- Converts Substack posts into Markdown and HTML files
+- Supports free and premium content (with subscription)
+- Multi-browser support: Chrome, Firefox, and Edge
+- Environment variable support for secure credential storage
+
+### Enhanced HTML Interface
+- **🎨 Dark/Light Mode**: Toggle between themes with persistent preference
+- **📄 Pagination**: Navigate through articles with configurable page sizes (25, 50, 100 items)
+- **🔍 Real-time Search**: Find articles by title or subtitle instantly
+- **🏷️ Tag Filtering**: Filter articles by topics with clickable tags
+- **📊 Advanced Stats**: See exactly how many articles match your filters
+- **📱 Single-Page Navigation**: Click articles to read in-page, use back button to return
+- **🎯 Smart Filters**: Hide sponsored content or filter by custom criteria
+- **📈 Sort Options**: Sort by date or likes (ascending/descending)
+- **🎨 Format Toggle**: Switch between Markdown and HTML views
+- **✨ Modern Design**: Apple-inspired aesthetics with smooth animations and responsive layout
 
 ## Installation
 
@@ -32,7 +45,7 @@ Clone the repo and install the dependencies:
 git clone https://github.com/yourusername/substack_scraper.git
 cd substack_scraper
 
-# # Optinally create a virtual environment
+# Optionally create a virtual environment
 # python -m venv venv
 # # Activate the virtual environment
 # .\venv\Scripts\activate  # Windows
@@ -41,14 +54,47 @@ cd substack_scraper
 pip install -r requirements.txt
 ```
 
-For the premium scraper, update the `config.py` in the root directory with your Substack email and password:
+For the premium scraper, set your Substack credentials as environment variables (recommended for security).
+
+**Option 1: Using a .env file (easiest)**
+
+Copy the example file and edit it:
+```bash
+cp .env.example .env
+# Edit .env with your credentials (this file is gitignored)
+```
+
+The `.env` file is automatically loaded when you run the scraper.
+
+**Option 2: Set environment variables directly**
+
+```bash
+# Linux/Mac
+export SUBSTACK_EMAIL="your-email@domain.com"
+export SUBSTACK_PASSWORD="your-password"
+
+# Windows (PowerShell)
+$env:SUBSTACK_EMAIL="your-email@domain.com"
+$env:SUBSTACK_PASSWORD="your-password"
+
+# Windows (Command Prompt)
+set SUBSTACK_EMAIL=your-email@domain.com
+set SUBSTACK_PASSWORD=your-password
+```
+
+**Option 3: Edit config.py directly (not recommended)**
+
+Alternatively, you can edit `config.py` in the root directory (not recommended as it may expose credentials):
 
 ```python
 EMAIL = "your-email@domain.com"
 PASSWORD = "your-password"
 ```
 
-You'll also need Microsoft Edge installed for the Selenium webdriver.
+You'll need a browser installed for Selenium automation:
+- **Edge** (default) - Microsoft Edge
+- **Chrome** - Google Chrome
+- **Firefox** - Mozilla Firefox
 
 ## Usage
 
@@ -71,6 +117,25 @@ For premium Substack sites:
 python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --premium
 ```
 
+To use a specific browser (Chrome, Firefox, or Edge):
+
+```bash
+# Using Chrome
+python substack_scraper.py --url https://example.substack.com --premium --browser chrome
+
+# Using Firefox
+python substack_scraper.py --url https://example.substack.com --premium --browser firefox
+
+# Using Edge (default)
+python substack_scraper.py --url https://example.substack.com --premium --browser edge
+```
+
+To run in headless mode (no browser window):
+
+```bash
+python substack_scraper.py --url https://example.substack.com --premium --headless
+```
+
 To scrape a specific number of posts:
 
 ```bash
@@ -85,12 +150,71 @@ For a hassle-free experience without any local setup:
 2. Enter the Substack URL you want to read or export
 3. Click "Go" to instantly view the content or "Export" to download Markdown files
 
-This online version provides a user-friendly web interface for reading and exporting free Substack articles, with no installation required. However, please note that the online version currently does not support exporting premium content. For full functionality, including premium content export, please use the local script as described above. Built by @Firevvork. 
+This online version provides a user-friendly web interface for reading and exporting free Substack articles, with no installation required. However, please note that the online version currently does not support exporting premium content. For full functionality, including premium content export, please use the local script as described above. Built by @Firevvork.
 
-## Viewing Markdown Files in Browser
+## Using the Enhanced HTML Interface
 
-To read the Markdown files in your browser, install the [Markdown Viewer](https://chromewebstore.google.com/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk)
-browser extension. But note, we also save the files as HTML for easy viewing, 
-just set the toggle to HTML on the author homepage. 
+After scraping, run the included web server to view the interface with full functionality:
 
-Or you can use our [Substack Reader](https://www.substacktools.com/reader) online tool, which allows you to read and export free Substack articles directly in your browser. (Note: Premium content export is currently only available in the local script version)
+```bash
+# Start the local web server
+python3 serve.py
+```
+
+This will:
+- Start a web server on `http://localhost:8000`
+- Automatically open the interface in your browser
+- Enable all features including in-page article viewing
+
+**Why use a server?** Modern browsers block local file access for security (CORS policy), which prevents article navigation from working when opening HTML files directly.
+
+**Tip**: Press `Ctrl+C` to stop the server when done.
+
+### Interface Features
+
+#### 🎨 Dark/Light Mode
+- Toggle between dark and light themes with the sun/moon button in the header
+- Your preference is saved automatically and persists across sessions
+- Apple-inspired design with smooth transitions and refined typography
+
+#### 📄 Pagination
+- Navigate through large article collections efficiently
+- Choose page size: 25, 50 (default), or 100 items per page
+- Full navigation controls: First, Previous, Next, Last page
+- Page information shows "Showing X-Y of Z" and current page
+- Auto-resets to page 1 when you change filters or search
+- Smooth scroll to top when changing pages
+
+#### 🔄 Single-Page Navigation
+- **Click to read**: Click any article to view it in the same page
+- **Back button**: Instantly return to your filtered article list
+- **Preserved state**: Your search, filters, scroll position, and current page are maintained
+- **Smooth transitions**: Seamless navigation between list and article views
+
+#### 📊 Smart Statistics
+- **Live counters**: Shows "X / Y articles" with real-time updates as you filter
+- **Active filters display**: Know exactly which filters are applied
+- **Tag counts**: See how many articles match each tag
+
+#### 🔍 Search & Filter
+- **Text Search**: Type in the search box to find articles by title/subtitle
+- **Tag Filtering**: Click tags to filter articles by topic
+  - Tags in the filter section show article counts
+  - Tags in article cards are also clickable
+  - Visual feedback shows which tags are active
+  - Multi-tag support: Select multiple tags to find articles with ALL selected topics
+- **Custom Filters**: The interface supports filtering by custom criteria (sponsored content, etc.)
+- **Clickable Rows**: Entire article row is clickable (except tags) for easy navigation
+
+#### 📱 Additional Features
+- **Sort Options**: By date or likes (click again to reverse)
+- **Format Toggle**: Switch between viewing HTML and Markdown files
+- **Tag Badges**: Each article shows its topic tags
+- **Responsive Design**: Mobile-friendly layout that adapts to screen size
+- **Smooth Animations**: Native-feeling transitions and micro-interactions
+
+### Alternative Viewing Methods
+
+To read the Markdown files directly in your browser, install the [Markdown Viewer](https://chromewebstore.google.com/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk) browser extension.
+
+Or use the [Substack Reader](https://www.substacktools.com/reader) online tool for free Substack articles (premium content requires the local script).

@@ -3,6 +3,9 @@ config.py
 setup.py
 **/__pycache__/
 
+# Ignore environment variable files with credentials
+.env
+
 # Ignore virtual environment directories
 venv/
 
