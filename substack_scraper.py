@@ -355,13 +355,17 @@ class BaseSubstackScraper(ABC):
                     html_content = self.md_to_html(md)
                     self.save_to_html_file(html_filepath, html_content)
 
+                    # Check if the content is sponsored
+                    is_sponsored = "sponsored)" in md.lower() or "(sponsored)" in md.lower()
+
                     essays_data.append({
                         "title": title,
                         "subtitle": subtitle,
                         "like_count": like_count,
                         "date": date,
                         "file_link": md_filepath,
-                        "html_link": html_filepath
+                        "html_link": html_filepath,
+                        "is_sponsored": is_sponsored
                     })
                 else:
                     print(f"File already exists: {md_filepath}")
