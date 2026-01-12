@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple HTTP server to serve the ByteByteGo article explorer
+Simple HTTP server to serve the article explorer
 Run this to view the interface with working article navigation
 """
 import http.server
@@ -24,7 +24,7 @@ Handler.extensions_map['.css'] = 'text/css'
 Handler.extensions_map['.js'] = 'application/javascript'
 
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    print(f"🚀 Starting ByteByteGo Article Explorer...")
+    print(f"🚀 Starting Article Explorer...")
     print(f"📡 Server running at http://localhost:{PORT}")
     print(f"🌐 Opening http://localhost:{PORT}/substack_html_pages/blog.html")
     print(f"\n✨ Press Ctrl+C to stop the server\n")

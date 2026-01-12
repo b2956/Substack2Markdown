@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ByteByteGo</title>
+    <title>Author Name</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
     <header>
         <div class="header-content">
             <div class="header-left">
-                <h1 id="author-name">ByteByteGo</h1>
+                <h1 id="author-name">Author Name</h1>
                 <p class="header-subtitle">Technical articles and insights</p>
             </div>
             <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
@@ -88,6 +88,42 @@
     <!-- List View -->
     <div id="list-view">
         <div id="essays-container"></div>
+        <div id="pagination-controls">
+            <div class="pagination-info">
+                <span id="page-info"></span>
+            </div>
+            <div class="pagination-buttons">
+                <button id="first-page" class="pagination-btn" title="First page">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M10 12L4 7l6-5M2 2v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button id="prev-page" class="pagination-btn" title="Previous page">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M9 12L3 7l6-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <span id="current-page-display"></span>
+                <button id="next-page" class="pagination-btn" title="Next page">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M5 12l6-5-6-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button id="last-page" class="pagination-btn" title="Last page">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M4 12l6-5-6-5M12 2v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="items-per-page">
+                <label for="items-per-page-select">Items per page:</label>
+                <select id="items-per-page-select">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Article View -->

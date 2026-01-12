@@ -13,6 +13,10 @@ import os
 import sys
 from substack_scraper import PremiumSubstackScraper, generate_html_file
 import re
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Import classification functions
 def is_sponsored_content(md_filepath):
@@ -78,8 +82,14 @@ def extract_tags_from_title(title):
 
 def get_new_articles():
     """Find articles not in our library"""
+    blog_url = os.getenv('SUBSTACK_BLOG_URL')
+    if not blog_url:
+        print("❌ Error: SUBSTACK_BLOG_URL not set in .env file")
+        print("Please add SUBSTACK_BLOG_URL=https://your-blog.substack.com to your .env file")
+        sys.exit(1)
+
     # Fetch sitemap
-    sitemap_url = "https://blog.bytebytego.com/sitemap.xml"
+    sitemap_url = f"{blog_url}/sitemap.xml"
     response = requests.get(sitemap_url)
     root = ET.fromstring(response.content)
 
@@ -132,6 +142,12 @@ def classify_new_articles():
     return classified_count
 
 def main():
+    blog_url = os.getenv('SUBSTACK_BLOG_URL')
+    if not blog_url:
+        print("❌ Error: SUBSTACK_BLOG_URL not set in .env file")
+        print("Please add SUBSTACK_BLOG_URL=https://your-blog.substack.com to your .env file")
+        sys.exit(1)
+
     print("🔍 Checking for new articles...")
     new_urls, current_count = get_new_articles()
 
@@ -147,7 +163,7 @@ def main():
 
     # Create scraper
     scraper = PremiumSubstackScraper(
-        "https://blog.bytebytego.com/",
+        f"{blog_url}/",
         md_save_dir="substack_md_files",
         html_save_dir="substack_html_pages",
         browser='chrome',

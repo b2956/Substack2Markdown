@@ -10,6 +10,11 @@ let originalData = [];
 let currentSort = null;
 let currentArticle = null;
 
+// Pagination state
+let currentPage = 1;
+let itemsPerPage = 50;
+let totalPages = 1;
+
 // Theme management
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -126,6 +131,18 @@ function createTagButtons() {
     });
 }
 
+// Update visual state of tags in article list
+function updateArticleTagsVisualState() {
+    document.querySelectorAll('.tag-clickable').forEach(tagElement => {
+        const tag = tagElement.dataset.tag;
+        if (selectedTags.includes(tag)) {
+            tagElement.classList.add('active');
+        } else {
+            tagElement.classList.remove('active');
+        }
+    });
+}
+
 // Toggle tag selection
 function toggleTag(tag, button) {
     const index = selectedTags.indexOf(tag);
@@ -136,6 +153,7 @@ function toggleTag(tag, button) {
         selectedTags.push(tag);
         button.classList.add('active');
     }
+    currentPage = 1; // Reset to first page when filtering changes
     refreshDisplay();
 }
 
@@ -179,6 +197,32 @@ function updateStats(filtered, total) {
     }
 }
 
+// Update pagination controls
+function updatePaginationControls(totalItems) {
+    totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Update page info
+    const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(currentPage * itemsPerPage, totalItems);
+    document.getElementById('page-info').textContent = `Showing ${start}-${end} of ${totalItems}`;
+
+    // Update current page display
+    document.getElementById('current-page-display').textContent = `Page ${currentPage} of ${totalPages}`;
+
+    // Update button states
+    document.getElementById('first-page').disabled = currentPage === 1;
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
+    document.getElementById('last-page').disabled = currentPage === totalPages || totalPages === 0;
+}
+
+// Go to specific page
+function goToPage(page) {
+    currentPage = Math.max(1, Math.min(page, totalPages));
+    refreshDisplay();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // Populate essays list
 function populateEssays(data) {
     const essaysContainer = document.getElementById('essays-container');
@@ -187,10 +231,16 @@ function populateEssays(data) {
     if (filtered.length === 0) {
         essaysContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">No articles found matching your filters.</div>';
         updateStats(0, originalData.length);
+        updatePaginationControls(0);
         return;
     }
 
-    const list = filtered.map(essay => {
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = filtered.slice(startIndex, endIndex);
+
+    const list = paginatedData.map(essay => {
         let badges = '';
         if (isSponsored(essay)) {
             badges += '<span class="badge badge-sponsored">SPONSORED</span>';
@@ -222,6 +272,7 @@ function populateEssays(data) {
 
     essaysContainer.innerHTML = `<ul>${list}</ul>`;
     updateStats(filtered.length, originalData.length);
+    updatePaginationControls(filtered.length);
 
     // Add click handlers to tags for filtering (must be done first)
     document.querySelectorAll('.tag-clickable').forEach(tagElement => {
@@ -275,6 +326,9 @@ function populateEssays(data) {
             });
         }
     });
+
+    // Update visual state of tags based on current selection
+    updateArticleTagsVisualState();
 }
 
 // Refresh display with current filters and sort
@@ -465,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hideSponsored = !hideSponsored;
         e.target.textContent = hideSponsored ? 'Show Sponsored' : 'Hide Sponsored';
         e.target.classList.toggle('active');
+        currentPage = 1;
         refreshDisplay();
     });
 
@@ -473,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hideCourseAds = !hideCourseAds;
         e.target.textContent = hideCourseAds ? 'Show Course Ads' : 'Hide Course Ads';
         e.target.classList.toggle('active');
+        currentPage = 1;
         refreshDisplay();
     });
 
@@ -480,12 +536,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
+        currentPage = 1;
         refreshDisplay();
     });
 
     document.getElementById('clear-search').addEventListener('click', () => {
         searchInput.value = '';
         searchQuery = '';
+        currentPage = 1;
         refreshDisplay();
     });
 
@@ -513,12 +571,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#tag-buttons button').forEach(btn => {
             btn.classList.remove('active');
         });
+        currentPage = 1;
         refreshDisplay();
     });
 
     // Back button
     document.getElementById('back-button').addEventListener('click', () => {
         showListView();
+    });
+
+    // Pagination controls
+    document.getElementById('first-page').addEventListener('click', () => goToPage(1));
+    document.getElementById('prev-page').addEventListener('click', () => goToPage(currentPage - 1));
+    document.getElementById('next-page').addEventListener('click', () => goToPage(currentPage + 1));
+    document.getElementById('last-page').addEventListener('click', () => goToPage(totalPages));
+
+    // Items per page selector
+    document.getElementById('items-per-page-select').addEventListener('change', (e) => {
+        itemsPerPage = parseInt(e.target.value);
+        currentPage = 1; // Reset to first page when changing items per page
+        refreshDisplay();
     });
 
     // Create tag buttons and initial population

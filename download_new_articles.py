@@ -7,6 +7,10 @@ from xml.etree import ElementTree as ET
 import json
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def get_existing_slugs():
     """Get slugs of articles we already have"""
@@ -23,7 +27,13 @@ def get_existing_slugs():
 
 def get_new_article_urls():
     """Fetch sitemap and find new articles"""
-    sitemap_url = "https://blog.bytebytego.com/sitemap.xml"
+    blog_url = os.getenv('SUBSTACK_BLOG_URL')
+    if not blog_url:
+        print("❌ Error: SUBSTACK_BLOG_URL not set in .env file")
+        print("Please add SUBSTACK_BLOG_URL=https://your-blog.substack.com to your .env file")
+        sys.exit(1)
+
+    sitemap_url = f"{blog_url}/sitemap.xml"
     response = requests.get(sitemap_url)
     root = ET.fromstring(response.content)
 

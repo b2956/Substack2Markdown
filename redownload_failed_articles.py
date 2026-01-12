@@ -3,8 +3,13 @@
 Re-download articles that failed to scrape properly
 """
 import os
+import sys
 import glob
 from substack_scraper import PremiumSubstackScraper, generate_html_file
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def find_failed_articles():
     """Find articles with 'Date not found' in their markdown content"""
@@ -27,8 +32,14 @@ def find_failed_articles():
 
 def get_urls_from_files(failed_files):
     """Convert file paths to URLs"""
+    blog_url = os.getenv('SUBSTACK_BLOG_URL')
+    if not blog_url:
+        print("❌ Error: SUBSTACK_BLOG_URL not set in .env file")
+        print("Please add SUBSTACK_BLOG_URL=https://your-blog.substack.com to your .env file")
+        sys.exit(1)
+
     urls = []
-    base_url = "https://blog.bytebytego.com/p/"
+    base_url = f"{blog_url}/p/"
 
     for filepath in failed_files:
         # Extract slug from filename
@@ -56,9 +67,11 @@ def main():
 
     print(f"\n⚙️  Re-downloading with premium scraper (Chrome)...\n")
 
+    blog_url = os.getenv('SUBSTACK_BLOG_URL')
+
     # Create scraper
     scraper = PremiumSubstackScraper(
-        "https://blog.bytebytego.com/",
+        f"{blog_url}/",
         md_save_dir="substack_md_files",
         html_save_dir="substack_html_pages",
         browser='chrome',
