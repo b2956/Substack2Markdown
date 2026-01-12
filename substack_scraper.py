@@ -25,7 +25,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
 from urllib.parse import urlparse
-from config import EMAIL, PASSWORD
+from config import EMAIL, PASSWORD, AUTHOR_NAME, BLOG_TITLE
 
 USE_PREMIUM: bool = True  # Set to True if you want to login to Substack and convert paid for posts
 BASE_SUBSTACK_URL: str = "https://www.thefitzwilliam.com/"  # Substack you want to convert to markdown
@@ -60,17 +60,18 @@ def generate_html_file(author_name: str) -> None:
     with open(HTML_TEMPLATE, 'r', encoding='utf-8') as file:
         html_template = file.read()
 
-    # Insert the JSON string into the script tag in the HTML template
-    html_with_data = html_template.replace('<!-- AUTHOR_NAME -->', author_name).replace(
+    # Replace template placeholders with actual values
+    html_with_data = html_template.replace('{{AUTHOR_NAME}}', AUTHOR_NAME).replace(
+        '{{BLOG_TITLE}}', BLOG_TITLE
+    ).replace(
         '<script type="application/json" id="essaysData"></script>',
         f'<script type="application/json" id="essaysData">{embedded_json_data}</script>'
     )
-    html_with_author = html_with_data.replace('author_name', author_name)
 
     # Write the modified HTML to a new file
     html_output_path = os.path.join(BASE_HTML_DIR, f'{author_name}.html')
     with open(html_output_path, 'w', encoding='utf-8') as file:
-        file.write(html_with_author)
+        file.write(html_with_data)
 
 
 class BaseSubstackScraper(ABC):
