@@ -61,13 +61,14 @@ cp .env.example .env
 # Edit .env with your credentials (this file is gitignored)
 ```
 
-Then load it before running:
-```bash
-# Linux/Mac
-source .env && python substack_scraper.py --premium
+Required variables in `.env`:
+- `SUBSTACK_EMAIL` - Your Substack account email
+- `SUBSTACK_PASSWORD` - Your Substack account password
+- `SUBSTACK_BLOG_URL` - Your Substack blog URL (e.g., https://your-blog.substack.com)
+- `SUBSTACK_AUTHOR_NAME` - Author name to display in the HTML interface
+- `SUBSTACK_BLOG_TITLE` - Blog title/subtitle to display in the HTML interface
 
-# Or use a tool like python-dotenv
-```
+The `.env` file is automatically loaded when you run the scraper.
 
 **Option 2: Set environment variables directly**
 
@@ -75,14 +76,20 @@ source .env && python substack_scraper.py --premium
 # Linux/Mac
 export SUBSTACK_EMAIL="your-email@domain.com"
 export SUBSTACK_PASSWORD="your-password"
+export SUBSTACK_AUTHOR_NAME="Your Name"
+export SUBSTACK_BLOG_TITLE="Your Blog Title"
 
 # Windows (PowerShell)
 $env:SUBSTACK_EMAIL="your-email@domain.com"
 $env:SUBSTACK_PASSWORD="your-password"
+$env:SUBSTACK_AUTHOR_NAME="Your Name"
+$env:SUBSTACK_BLOG_TITLE="Your Blog Title"
 
 # Windows (Command Prompt)
 set SUBSTACK_EMAIL=your-email@domain.com
 set SUBSTACK_PASSWORD=your-password
+set SUBSTACK_AUTHOR_NAME=Your Name
+set SUBSTACK_BLOG_TITLE=Your Blog Title
 ```
 
 **Option 3: Edit config.py directly (not recommended)**
