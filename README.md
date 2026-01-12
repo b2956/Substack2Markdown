@@ -157,9 +157,29 @@ This online version provides a user-friendly web interface for reading and expor
 
 ## Using the Enhanced HTML Interface
 
-After scraping, open the generated HTML file (e.g., `substack_html_pages/blog.html`) in your browser to access the full-featured interface.
+After scraping, you need to run a local web server to view the interface with full functionality (including single-page article navigation):
+
+```bash
+# Start the local web server
+python3 serve.py
+```
+
+This will:
+- Start a web server on `http://localhost:8000`
+- Automatically open the interface in your browser
+- Enable all features including in-page article viewing
+
+**Why use a server?** Modern browsers block local file access for security (CORS policy), which prevents article navigation from working when opening HTML files directly.
+
+**Tip**: Press `Ctrl+C` to stop the server when done.
 
 ### Interface Features
+
+#### 🔄 Single-Page Navigation
+- **Click to read**: Click any article to view it in the same page
+- **Back button**: Instantly return to your filtered article list
+- **Preserved state**: Your search, filters, and scroll position are maintained
+- **Smooth transitions**: Seamless navigation between list and article views
 
 #### 📊 Smart Statistics
 - **Live counters**: Shows "X / Y articles" with real-time updates as you filter
