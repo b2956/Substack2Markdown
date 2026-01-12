@@ -250,22 +250,38 @@ function showArticleView() {
 
 async function loadArticle(articlePath) {
     try {
-        const response = await fetch(`../${articlePath}`);
+        // Strip the 'substack_html_pages/' or 'substack_md_files/' prefix from path
+        // Since blog.html is in substack_html_pages/, we need relative path from there
+        const relativePath = articlePath.replace('substack_html_pages/', '').replace('substack_md_files/', '../substack_md_files/');
+
+        const response = await fetch(relativePath);
         if (!response.ok) {
-            throw new Error('Failed to load article');
+            throw new Error(`Failed to load article: ${response.status}`);
         }
         const htmlContent = await response.text();
 
-        // Extract the content from the fetched HTML
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const content = doc.querySelector('.markdown-content') || doc.body;
+        // Check if this is a markdown file
+        if (articlePath.endsWith('.md')) {
+            // For markdown files, display as preformatted text
+            document.getElementById('article-content').innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${htmlContent}</pre>`;
+        } else {
+            // Extract the content from the fetched HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+            const content = doc.querySelector('.markdown-content') || doc.querySelector('main') || doc.body;
 
-        document.getElementById('article-content').innerHTML = content.innerHTML;
+            document.getElementById('article-content').innerHTML = content.innerHTML;
+        }
         showArticleView();
     } catch (error) {
         console.error('Error loading article:', error);
-        document.getElementById('article-content').innerHTML = '<p style="color: red;">Error loading article. Please try again.</p>';
+        document.getElementById('article-content').innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+                <p style="color: red; font-size: 18px; margin-bottom: 10px;">⚠️ Error loading article</p>
+                <p style="color: #666;">${error.message}</p>
+                <p style="color: #999; margin-top: 10px;">Try refreshing the page or selecting a different article.</p>
+            </div>
+        `;
         showArticleView();
     }
 }
