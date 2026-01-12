@@ -8,6 +8,23 @@ let searchQuery = '';
 let selectedTags = [];
 let originalData = [];
 let currentSort = null;
+let currentArticle = null;
+
+// Theme management
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// Initialize theme on page load
+initTheme();
 
 // Check if essay is sponsored
 function isSponsored(essay) {
@@ -176,27 +193,28 @@ function populateEssays(data) {
     const list = filtered.map(essay => {
         let badges = '';
         if (isSponsored(essay)) {
-            badges += '<span style="background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">SPONSORED</span>';
+            badges += '<span class="badge badge-sponsored">SPONSORED</span>';
         }
         if (isCourseAd(essay)) {
-            badges += '<span style="background: #ffa500; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">COURSE AD</span>';
+            badges += '<span class="badge badge-course">COURSE AD</span>';
         }
 
         // Add topic tags
         const tags = essay.tags || [];
         const tagBadges = tags.map(tag =>
-            `<span style="background: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px;">${tag}</span>`
+            `<span class="badge badge-tag tag-clickable" data-tag="${tag}">${tag}</span>`
         ).join('');
 
         return `
-            <li>
-                <a href="#" class="article-link" data-html-link="${essay.html_link}" data-md-link="${essay.file_link}">
-                    ${essay.title}${badges}
-                </a>
+            <li class="article-item" data-html-link="${essay.html_link}" data-md-link="${essay.file_link}">
+                <div class="article-title-wrapper">
+                    <span class="article-link">${essay.title}</span>
+                    ${badges}
+                </div>
                 <div class="subtitle">${essay.subtitle}</div>
                 <div class="metadata">
-                    ${essay.like_count} Likes - ${essay.date}
-                    ${tagBadges ? '<br><div style="margin-top: 8px;">' + tagBadges + '</div>' : ''}
+                    <div>${essay.like_count} Likes - ${essay.date}</div>
+                    ${tagBadges ? '<div style="margin-top: 8px;">' + tagBadges + '</div>' : ''}
                 </div>
             </li>
         `;
@@ -205,13 +223,57 @@ function populateEssays(data) {
     essaysContainer.innerHTML = `<ul>${list}</ul>`;
     updateStats(filtered.length, originalData.length);
 
-    // Add click handlers to article links
-    document.querySelectorAll('.article-link').forEach(link => {
-        link.addEventListener('click', (e) => {
+    // Add click handlers to tags for filtering (must be done first)
+    document.querySelectorAll('.tag-clickable').forEach(tagElement => {
+        tagElement.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent article click
             e.preventDefault();
-            const articlePath = showHTML ? link.dataset.htmlLink : link.dataset.mdLink;
-            loadArticle(articlePath);
+            const tag = tagElement.dataset.tag;
+
+            // Find the corresponding tag button in the filter section
+            const tagButton = Array.from(document.querySelectorAll('#tag-buttons button'))
+                .find(btn => btn.dataset.tag === tag);
+
+            if (tagButton) {
+                // Toggle tag selection
+                toggleTag(tag, tagButton);
+            }
         });
+    });
+
+    // Add click handlers to article items (entire row clickable except tags)
+    document.querySelectorAll('.article-item').forEach(item => {
+        // Click on title wrapper
+        const titleWrapper = item.querySelector('.article-title-wrapper');
+        if (titleWrapper) {
+            titleWrapper.addEventListener('click', (e) => {
+                if (e.target.classList.contains('tag-clickable') ||
+                    e.target.classList.contains('badge-sponsored') ||
+                    e.target.classList.contains('badge-course')) {
+                    return;
+                }
+                const articlePath = showHTML ? item.dataset.htmlLink : item.dataset.mdLink;
+                loadArticle(articlePath);
+            });
+        }
+
+        // Click on subtitle
+        const subtitle = item.querySelector('.subtitle');
+        if (subtitle) {
+            subtitle.addEventListener('click', (e) => {
+                const articlePath = showHTML ? item.dataset.htmlLink : item.dataset.mdLink;
+                loadArticle(articlePath);
+            });
+        }
+
+        // Click on metadata (likes/date)
+        const metadataFirst = item.querySelector('.metadata > div:first-child');
+        if (metadataFirst) {
+            metadataFirst.addEventListener('click', (e) => {
+                const articlePath = showHTML ? item.dataset.htmlLink : item.dataset.mdLink;
+                loadArticle(articlePath);
+            });
+        }
     });
 }
 
@@ -248,8 +310,91 @@ function showArticleView() {
     window.scrollTo(0, 0);
 }
 
+// Find related articles based on shared tags
+function findRelatedArticles(currentArticle, maxResults = 5) {
+    const currentTags = currentArticle.tags || [];
+    if (currentTags.length === 0) {
+        return [];
+    }
+
+    // Score each article by number of shared tags
+    const scoredArticles = originalData
+        .filter(essay => essay.file_link !== currentArticle.file_link) // Exclude current article
+        .map(essay => {
+            const essayTags = essay.tags || [];
+            const sharedTags = currentTags.filter(tag => essayTags.includes(tag));
+            return {
+                essay,
+                sharedTags: sharedTags,
+                score: sharedTags.length
+            };
+        })
+        .filter(item => item.score > 0) // Only include articles with at least one shared tag
+        .sort((a, b) => {
+            // Sort by score (descending), then by likes (descending)
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return b.essay.like_count - a.essay.like_count;
+        });
+
+    return scoredArticles.slice(0, maxResults);
+}
+
+// Display related articles
+function displayRelatedArticles(currentArticle) {
+    const relatedSection = document.getElementById('related-articles-section');
+    const relatedList = document.getElementById('related-articles-list');
+
+    const related = findRelatedArticles(currentArticle);
+
+    if (related.length === 0) {
+        relatedSection.style.display = 'none';
+        return;
+    }
+
+    const relatedHTML = related.map(item => {
+        const { essay, sharedTags } = item;
+        const tagBadges = sharedTags.map(tag =>
+            `<span class="badge badge-tag" style="background: var(--accent-primary); color: white; border-color: var(--accent-primary);">${tag}</span>`
+        ).join('');
+
+        return `
+            <div class="related-article-item">
+                <a href="#" class="related-article-link" data-html-link="${essay.html_link}" data-md-link="${essay.file_link}">
+                    <strong>${essay.title}</strong>
+                </a>
+                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: var(--space-xs);">
+                    ${essay.subtitle}
+                </div>
+                <div style="margin-top: var(--space-sm);">
+                    ${tagBadges}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    relatedList.innerHTML = relatedHTML;
+    relatedSection.style.display = 'block';
+
+    // Add click handlers to related article links
+    document.querySelectorAll('.related-article-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const articlePath = showHTML ? link.dataset.htmlLink : link.dataset.mdLink;
+            loadArticle(articlePath);
+        });
+    });
+}
+
 async function loadArticle(articlePath) {
     try {
+        // Find the current article in originalData
+        currentArticle = originalData.find(essay =>
+            (showHTML && essay.html_link === articlePath) ||
+            (!showHTML && essay.file_link === articlePath)
+        );
+
         // Strip the 'substack_html_pages/' or 'substack_md_files/' prefix from path
         // Since blog.html is in substack_html_pages/, we need relative path from there
         const relativePath = articlePath.replace('substack_html_pages/', '').replace('substack_md_files/', '../substack_md_files/');
@@ -272,6 +417,12 @@ async function loadArticle(articlePath) {
 
             document.getElementById('article-content').innerHTML = content.innerHTML;
         }
+
+        // Display related articles
+        if (currentArticle) {
+            displayRelatedArticles(currentArticle);
+        }
+
         showArticleView();
     } catch (error) {
         console.error('Error loading article:', error);
@@ -290,6 +441,12 @@ async function loadArticle(articlePath) {
 document.addEventListener('DOMContentLoaded', () => {
     const embeddedDataElement = document.getElementById('essaysData');
     originalData = JSON.parse(embeddedDataElement.textContent);
+
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
 
     // Toggle format (HTML/Markdown)
     const toggleButton = document.getElementById('toggle-format');
