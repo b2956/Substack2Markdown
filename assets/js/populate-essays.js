@@ -299,5 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Create tag buttons and initial population
     createTagButtons();
-    populateEssays(originalData);
+
+    // Sort by date (newest first) by default
+    currentSort = 'date';
+    sortDatesAscending = false;
+    const sortedData = [...originalData].sort((a, b) => new Date(b.date) - new Date(a.date));
+    populateEssays(sortedData);
 });
