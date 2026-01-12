@@ -7,12 +7,44 @@
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-    <h1 id="author-name"><!-- AUTHOR_NAME --></h1>
-    <div id="sort-buttons">
-        <button id="toggle-format">Toggle MD/HTML</button>
-        <button id="sort-by-date">Sort by Date</button>
-        <button id="sort-by-likes">Sort by Likes</button>
+    <header>
+        <h1 id="author-name"><!-- AUTHOR_NAME --></h1>
+        <div id="stats">
+            <div id="main-stats">
+                <span id="showing-count">0</span> / <span id="total-count">0</span> articles
+            </div>
+            <div id="sub-stats">
+                <span id="sponsored-count"></span>
+                <span id="filter-status"></span>
+            </div>
+        </div>
+    </header>
+
+    <div id="controls">
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search articles...">
+            <button id="clear-search">Clear</button>
+        </div>
+
+        <div id="filter-buttons">
+            <button id="toggle-sponsored" class="filter-btn">Hide Sponsored</button>
+            <button id="toggle-course-ads" class="filter-btn">Hide Course Ads</button>
+            <button id="toggle-format">Show Markdown</button>
+        </div>
+
+        <div id="tag-filter-section">
+            <h3>Filter by Topics:</h3>
+            <div id="tag-buttons"></div>
+            <button id="clear-tags" style="margin-top: 10px;">Clear All Tags</button>
+        </div>
+
+        <div id="sort-buttons">
+            <button id="sort-by-date">Sort by Date</button>
+            <button id="sort-by-likes">Sort by Likes</button>
+            <button id="reset-sort">Reset</button>
+        </div>
     </div>
+
     <div id="essays-container"></div>
     <script type="application/json" id="essaysData"></script>
     <script src="../assets/js/populate-essays.js"></script>
